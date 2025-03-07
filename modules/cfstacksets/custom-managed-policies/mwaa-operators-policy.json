@@ -1,0 +1,54 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AccessMWAADashboard",
+      "Effect": "Allow",
+      "Action": "airflow:CreateWebLoginToken",
+      "Resource": "arn:aws:airflow:*:*:role/*/Op"
+    },
+    {
+      "Sid": "ViewMWAADashboard",
+      "Effect": "Allow",
+      "Action": [
+        "airflow:ListEnvironments",
+        "airflow:GetEnvironment"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ViewAndManageMWAAS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::faye-airflow*",
+        "arn:aws:s3:::faye-airflow*/*"
+      ]
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:FilterLogEvents",
+        "logs:GetLogEvents"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AccessCloudWatchMetrics",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:GetMetricData",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
