@@ -15,10 +15,6 @@ data "aws_iam_policy_document" "gha_oidc_assume_role_policy" {
       test     = "StringLike"
       variable = "${replace(module.iam_github_oidc_provider[0].url, "https://", "")}:sub"
       values = concat([
-        #"${var.core_app_repo}:ref:refs/heads/main",
-        #"${var.tf_repo}:ref:refs/heads/main",
-        #"${var.tf_repo}:ref:refs/heads/development",
-        #"${var.core_app_repo}:environment:development"
         "repo:${var.tf_repo}:*"], [for repo in var.app_repos : "repo:${repo}:*"]
       )
     }
