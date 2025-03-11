@@ -6,12 +6,10 @@ terraform {
 
 locals {
   common_vars   = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  global_prefix = local.common_vars.locals.global_prefix
   env           = "root"
-  profile       = get_env("AWS_PROFILE_ROOT", "${local.common_vars.inputs.company_prefix}-root-sso")
+  profile       = get_env("AWS_PROFILE_ROOT", "${local.global_prefix}-root-sso")
   region        = local.common_vars.inputs.region
-  ci_env        = get_env("CI", "false")
-  creator_email = tobool(local.ci_env) ? get_env("GITHUB_ACTOR", "NOT_SET") : run_cmd("git", "config", "--get", "user.email")
-  creator       = get_env("USER", "NOT_SET")
 }
 
 inputs = merge(
@@ -31,8 +29,8 @@ remote_state {
   }
 
   config = {
-    bucket         = "${local.common_vars.inputs.company_prefix}-terraform-state-root"
-    key            = "${local.common_vars.inputs.company_prefix}/${get_path_from_repo_root()}/terraform.tfstate"
+    bucket         = "${local.global_prefix}-terraform-state-root"
+    key            = "${local.global_prefix}/${get_path_from_repo_root()}/terraform.tfstate"
     region         = local.region
     encrypt        = true
     dynamodb_table = "root-tfstate-lock-table"
@@ -47,18 +45,10 @@ generate "provider" {
       region = "${local.region}"
       allowed_account_ids =["${local.common_vars.inputs.org_account_ids[local.env]}"]
 
-# Assumed terraform-execution-role in root account have to be created manually, alternatively we could use sso
-# role / iam user directly by commenting out lines below
-# assume_role {
-# role_arn = "arn:aws:iam::${local.common_vars.inputs.org_account_ids[local.env]}:role/${local.common_vars.inputs.tf_role_name}"
-# }
-
       default_tags {
         tags = {
           Environment  = "${local.env}"
           ManagedBy    = "terraform"
-          DeployedBy   = "terragrunt"
-          Company      = "${local.common_vars.inputs.company_prefix}"
         }
       }
     }

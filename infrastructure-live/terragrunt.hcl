@@ -15,24 +15,16 @@ terraform {
 }
 
 locals {
-  common_vars     = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  secret_vars_ecs = yamldecode(sops_decrypt_file(find_in_parent_folders("secrets-ecs.yaml")))
-  company_prefix  = local.common_vars.inputs.company_prefix
-  region          = local.common_vars.inputs.region
-  env_regex       = "infrastructure-live/([a-zA-Z0-9-]+)/"
-  env             = try(regex(local.env_regex, get_original_terragrunt_dir())[0], "shared-services")
-  tg_repo         = "repo:${replace(replace(trimspace(run_cmd("git", "config", "--get", "remote.origin.url")), "git@github.com:", ""), ".git", "")}"
-  profile         = get_env("AWS_PROFILE", "${local.company_prefix}-shared-services-tf")
-  ci_env          = get_env("CI", "false")
-  creator_email   = tobool(local.ci_env) ? get_env("GITHUB_ACTOR", "NOT_SET") : run_cmd("git", "config", "--get", "user.email")
-  creator         = get_env("USER", "NOT_SET")
+  common_vars   = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region        = local.common_vars.inputs.region
+  env_regex     = local.common_vars.locals.env_regex
+  env           = local.common_vars.locals.env
+  global_prefix = local.common_vars.locals.global_prefix
 }
 
 inputs = merge(
   local.common_vars.inputs,
-  local.secret_vars_ecs,
   {
-    tg_repo    = local.tg_repo
     env        = local.env
     region     = local.region
     account_id = local.common_vars.inputs.org_account_ids[local.env]
@@ -47,8 +39,8 @@ remote_state {
   }
 
   config = {
-    bucket         = "${local.company_prefix}-terraform-state-shared-services"
-    key            = "${local.company_prefix}/${get_path_from_repo_root()}/terraform.tfstate"
+    bucket         = "${local.global_prefix}-terraform-state-shared-services"
+    key            = "${local.global_prefix}/${get_path_from_repo_root()}/terraform.tfstate"
     region         = local.region
     encrypt        = true
     dynamodb_table = "shared-services-tfstate-lock-table"
@@ -76,7 +68,6 @@ generate "provider" {
           Environment   = "${local.env}"
           ManagedBy     = "terraform"
           DeployedBy    = "terragrunt"
-          Company       = "${local.company_prefix}"
         }
       }
     }
