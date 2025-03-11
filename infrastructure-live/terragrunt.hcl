@@ -1,4 +1,3 @@
-// Additional binary dependencies: sops, python3.12, pip, boto3
 skip                          = true
 terragrunt_version_constraint = ">= 0.66"
 terraform_version_constraint  = ">= 1.9.0"
